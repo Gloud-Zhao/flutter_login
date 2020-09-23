@@ -99,7 +99,8 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
     // replace 0 with minPositive to pass the test
     // https://github.com/flutter/flutter/issues/42527#issuecomment-575131275
     _cardOverlayHeightFactorAnimation =
-        Tween<double>(begin: double.minPositive, end: 1.0).animate(CurvedAnimation(
+        Tween<double>(begin: double.minPositive, end: 1.0)
+            .animate(CurvedAnimation(
       parent: _routeTransitionController,
       curve: Interval(.27272727, .5 /* ~250ms */, curve: Curves.linear),
     ));
@@ -540,7 +541,8 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildConfirmPasswordField(double width, LoginMessages messages, Auth auth) {
+  Widget _buildConfirmPasswordField(
+      double width, LoginMessages messages, Auth auth) {
     return AnimatedPasswordTextFormField(
       animatedWidth: width,
       enabled: auth.isSignup,
@@ -576,16 +578,19 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
           style: theme.textTheme.body1,
           textAlign: TextAlign.left,
         ),
-        onPressed: buttonEnabled ? () {
-          // save state to populate email field on recovery card
-          _formKey.currentState.save();
-          widget.onSwitchRecoveryPassword();
-        } : null,
+        onPressed: buttonEnabled
+            ? () {
+                // save state to populate email field on recovery card
+                _formKey.currentState.save();
+                widget.onSwitchRecoveryPassword();
+              }
+            : null,
       ),
     );
   }
 
-  Widget _buildSubmitButton(ThemeData theme, LoginMessages messages, Auth auth) {
+  Widget _buildSubmitButton(
+      ThemeData theme, LoginMessages messages, Auth auth) {
     return ScaleTransition(
       scale: _buttonScaleAnimation,
       child: AnimatedButton(
@@ -596,7 +601,8 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildSwitchAuthButton(ThemeData theme, LoginMessages messages, Auth auth) {
+  Widget _buildSwitchAuthButton(
+      ThemeData theme, LoginMessages messages, Auth auth) {
     return FadeIn(
       controller: _loadingController,
       offset: .5,
@@ -647,22 +653,22 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
               ],
             ),
           ),
-          ExpandableContainer(
-            backgroundColor: theme.accentColor,
-            controller: _switchAuthController,
-            initialState: isLogin
-                ? ExpandableContainerState.shrunk
-                : ExpandableContainerState.expanded,
-            alignment: Alignment.topLeft,
-            color: theme.cardTheme.color,
-            width: cardWidth,
-            padding: EdgeInsets.symmetric(
-              horizontal: cardPadding,
-              vertical: 10,
-            ),
-            onExpandCompleted: () => _postSwitchAuthController.forward(),
-            child: _buildConfirmPasswordField(textFieldWidth, messages, auth),
-          ),
+          // ExpandableContainer(
+          //   backgroundColor: theme.accentColor,
+          //   controller: _switchAuthController,
+          //   initialState: isLogin
+          //       ? ExpandableContainerState.shrunk
+          //       : ExpandableContainerState.expanded,
+          //   alignment: Alignment.topLeft,
+          //   color: theme.cardTheme.color,
+          //   width: cardWidth,
+          //   padding: EdgeInsets.symmetric(
+          //     horizontal: cardPadding,
+          //     vertical: 10,
+          //   ),
+          //   onExpandCompleted: () => _postSwitchAuthController.forward(),
+          //   child: _buildConfirmPasswordField(textFieldWidth, messages, auth),
+          // ),
           Container(
             padding: Paddings.fromRBL(cardPadding),
             width: cardWidth,
@@ -702,14 +708,23 @@ class _RecoverCard extends StatefulWidget {
 }
 
 class _RecoverCardState extends State<_RecoverCard>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final GlobalKey<FormState> _formRecoverKey = GlobalKey();
 
   TextEditingController _nameController;
+  TextEditingController _codeController;
+
 
   var _isSubmitting = false;
+  var _inputAccountFinish = false;
 
   AnimationController _submitController;
+
+  AnimationController _switchAuthController;
+  AnimationController _postSwitchAuthController;
+
+  AnimationController _loadingController;
+
 
   @override
   void initState() {
@@ -717,17 +732,57 @@ class _RecoverCardState extends State<_RecoverCard>
 
     final auth = Provider.of<Auth>(context, listen: false);
     _nameController = new TextEditingController(text: auth.email);
+    _codeController=new TextEditingController(text:auth.code);
 
     _submitController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 1000),
     );
+
+    _switchAuthController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 800),
+    );
+    _postSwitchAuthController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 150),
+    );
+
+    _loadingController = (AnimationController(
+          vsync: this,
+          duration: Duration(milliseconds: 1150),
+          reverseDuration: Duration(milliseconds: 300),
+        )..value = 1.0);
+
+    _loadingController.addStatusListener(handleLoadingAnimationStatus);
+  }
+
+  bool _isLoading=false;
+
+  void handleLoadingAnimationStatus(AnimationStatus status) {
+    if (status == AnimationStatus.forward) {
+      setState(() => _isLoading = true);
+    }
+    if (status == AnimationStatus.completed) {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
   void dispose() {
     super.dispose();
     _submitController.dispose();
+    _switchAuthController.dispose();
+    _postSwitchAuthController.dispose();
+    _loadingController.dispose();
+  }
+
+  void _switchAuthMode() {
+    if (_inputAccountFinish) {
+      _switchAuthController.forward();
+    } else {
+      _switchAuthController.reverse();
+    }
   }
 
   Future<bool> _submit() async {
@@ -755,7 +810,8 @@ class _RecoverCardState extends State<_RecoverCard>
     }
   }
 
-  Widget _buildRecoverNameField(double width, LoginMessages messages, Auth auth) {
+  Widget _buildRecoverNameField(
+      double width, LoginMessages messages, Auth auth) {
     return AnimatedTextFormField(
       controller: _nameController,
       width: width,
@@ -769,21 +825,43 @@ class _RecoverCardState extends State<_RecoverCard>
     );
   }
 
+  Widget _buildCodeField(double width, LoginMessages messages, Auth auth) {
+    return AnimatedTextFormField(
+      controller: _codeController,
+      width: width,
+      // loadingController: _loadingController,
+      // interval: _nameTextFieldLoadingAnimationInterval,
+      labelText: messages.userCodeHint,
+      prefixIcon: Icon(FontAwesomeIcons.pager),
+      keyboardType: TextInputType.number,
+      textInputAction: TextInputAction.done,
+      onFieldSubmitted: (value) => _submit(),
+      validator: widget.emailValidator,
+      onSaved: (value) => auth.code = value,
+    );
+  }
+
   Widget _buildRecoverButton(ThemeData theme, LoginMessages messages) {
     return AnimatedButton(
       controller: _submitController,
       text: messages.recoverPasswordButton,
-      onPressed: !_isSubmitting ? _submit : null,
+      // onPressed: !_isSubmitting ? _submit : null,
+      onPressed: () {
+        _inputAccountFinish = true;
+        _switchAuthMode();
+      },
     );
   }
 
   Widget _buildBackButton(ThemeData theme, LoginMessages messages) {
     return FlatButton(
       child: Text(messages.goBackButton),
-      onPressed: !_isSubmitting ? () {
-        _formRecoverKey.currentState.save();
-        widget.onSwitchLogin();
-      } : null,
+      onPressed: !_isSubmitting
+          ? () {
+              _formRecoverKey.currentState.save();
+              widget.onSwitchLogin();
+            }
+          : null,
       padding: EdgeInsets.symmetric(horizontal: 30.0, vertical: 4),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       textColor: theme.primaryColor,
@@ -804,11 +882,8 @@ class _RecoverCardState extends State<_RecoverCard>
       // width: cardWidth,
       child: Card(
         child: Container(
-          padding: const EdgeInsets.only(
-            left: cardPadding,
-            top: cardPadding + 10.0,
-            right: cardPadding,
-            bottom: cardPadding,
+          padding: EdgeInsets.only(
+            top: cardPadding + 10,
           ),
           width: cardWidth,
           alignment: Alignment.center,
@@ -823,8 +898,28 @@ class _RecoverCardState extends State<_RecoverCard>
                   style: theme.textTheme.body1,
                 ),
                 SizedBox(height: 20),
-                _buildRecoverNameField(textFieldWidth, messages, auth),
+                Padding(
+                  child: _buildRecoverNameField(textFieldWidth, messages, auth),
+                  padding:
+                      EdgeInsets.only(left: cardPadding, right: cardPadding),
+                ),
                 SizedBox(height: 20),
+                ExpandableContainer(
+                  backgroundColor: theme.accentColor,
+                  controller: _switchAuthController,
+                  initialState: _inputAccountFinish
+                      ? ExpandableContainerState.expanded
+                      : ExpandableContainerState.shrunk,
+                  alignment: Alignment.topLeft,
+                  color: theme.cardTheme.color,
+                  width: cardWidth,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: cardPadding,
+                    vertical: 10,
+                  ),
+                  onExpandCompleted: () => _postSwitchAuthController.forward(),
+                  child: _buildCodeField(textFieldWidth, messages, auth),
+                ),
                 Text(
                   messages.recoverPasswordDescription,
                   key: kRecoverPasswordDescriptionKey,

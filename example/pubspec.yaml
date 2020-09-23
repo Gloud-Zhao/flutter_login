@@ -24,7 +24,7 @@ flutter:
   uses-material-design: true
 
   assets:
-  - assets/images/ecorp.png
+  - assets/images/ic_launcher.png
   - assets/images/ecorp-lightblue.png
   - assets/images/ecorp-lightgreen.png
 

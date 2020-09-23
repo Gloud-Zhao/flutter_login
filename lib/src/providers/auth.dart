@@ -58,6 +58,13 @@ class Auth with ChangeNotifier {
     notifyListeners();
   }
 
+  String _code = '';
+  get code => _code;
+  set code(String code) {
+    _code = code;
+    notifyListeners();
+  }
+
   String _password = '';
   get password => _password;
   set password(String password) {

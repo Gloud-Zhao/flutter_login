@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class LoginMessages with ChangeNotifier {
   LoginMessages({
     this.usernameHint: defaultUsernameHint,
+    this.userCodeHint:defaultUsercodeHint,
     this.passwordHint: defaultPasswordHint,
     this.confirmPasswordHint: defaultConfirmPasswordHint,
     this.forgotPasswordButton: defaultForgotPasswordButton,
@@ -16,22 +17,25 @@ class LoginMessages with ChangeNotifier {
     this.recoverPasswordSuccess: defaultRecoverPasswordSuccess,
   });
 
-  static const defaultUsernameHint = 'Email';
+  static const defaultUsernameHint = 'Email/Phone';
+  static const defaultUsercodeHint = 'Code';
   static const defaultPasswordHint = 'Password';
   static const defaultConfirmPasswordHint = 'Confirm Password';
   static const defaultForgotPasswordButton = 'Forgot Password?';
   static const defaultLoginButton = 'LOGIN';
   static const defaultSignupButton = 'SIGNUP';
   static const defaultRecoverPasswordButton = 'RECOVER';
-  static const defaultRecoverPasswordIntro = 'Reset your password here';
+  static const defaultRecoverPasswordIntro = 'Register or Code Login';
   static const defaultRecoverPasswordDescription =
-      'We will send your plain-text password to this email account.';
+      'We will send Code to this account.';
   static const defaultGoBackButton = 'BACK';
   static const defaultConfirmPasswordError = 'Password do not match!';
   static const defaultRecoverPasswordSuccess = 'An email has been sent';
 
   /// Hint text of the user name [TextField]
   final String usernameHint;
+
+  final String userCodeHint;
 
   /// Hint text of the password [TextField]
   final String passwordHint;

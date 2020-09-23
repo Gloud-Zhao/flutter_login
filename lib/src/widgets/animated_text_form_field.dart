@@ -216,6 +216,7 @@ class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
       enabled: widget.enabled,
     );
 
+
     if (widget.loadingController != null) {
       textField = ScaleTransition(
         scale: scaleAnimation,
