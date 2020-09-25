@@ -26,6 +26,7 @@ class AuthCard extends StatefulWidget {
     this.loadingController,
     this.emailValidator,
     this.passwordValidator,
+    this.codeValidator,
     this.onSubmit,
     this.onSubmitCompleted,
   }) : super(key: key);
@@ -34,6 +35,7 @@ class AuthCard extends StatefulWidget {
   final AnimationController loadingController;
   final FormFieldValidator<String> emailValidator;
   final FormFieldValidator<String> passwordValidator;
+  final FormFieldValidator<String> codeValidator;
   final Function onSubmit;
   final Function onSubmitCompleted;
 
@@ -297,10 +299,17 @@ class AuthCardState extends State<AuthCard> with TickerProviderStateMixin {
                     },
                   ),
                 )
-              : _RecoverCard(
-                  emailValidator: widget.emailValidator,
-                  onSwitchLogin: () => _switchRecovery(false),
-                );
+              :  _RecoverCard(
+                      key: _cardKey,
+                      emailValidator: widget.emailValidator,
+                      codeValidator: widget.codeValidator,
+                      onSwitchLogin: () => _switchRecovery(false),
+                      onSubmitCompleted: () {
+                        // _forwardChangeRouteAnimation().then((_) {
+                        //
+                        // });
+                        widget?.onSubmitCompleted();
+                      });
 
           return Align(
             alignment: Alignment.topCenter,
@@ -380,7 +389,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
     super.initState();
 
     final auth = Provider.of<Auth>(context, listen: false);
-    _nameController = TextEditingController(text: auth.email);
+    _nameController = TextEditingController(text: auth.account);
     _passController = TextEditingController(text: auth.password);
     _confirmPassController = TextEditingController(text: auth.confirmPassword);
 
@@ -468,12 +477,12 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
 
     if (auth.isLogin) {
       error = await auth.onLogin(LoginData(
-        name: auth.email,
+        name: auth.account,
         password: auth.password,
       ));
     } else {
       error = await auth.onSignup(LoginData(
-        name: auth.email,
+        name: auth.account,
         password: auth.password,
       ));
     }
@@ -514,7 +523,7 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
         FocusScope.of(context).requestFocus(_passwordFocusNode);
       },
       validator: widget.emailValidator,
-      onSaved: (value) => auth.email = value,
+      onSaved: (value) => auth.account = value,
     );
   }
 
@@ -694,14 +703,18 @@ class _LoginCardState extends State<_LoginCard> with TickerProviderStateMixin {
 }
 
 class _RecoverCard extends StatefulWidget {
-  _RecoverCard({
-    Key key,
-    @required this.emailValidator,
-    @required this.onSwitchLogin,
-  }) : super(key: key);
+  _RecoverCard(
+      {Key key,
+      @required this.emailValidator,
+      @required this.codeValidator,
+      @required this.onSwitchLogin,
+      @required this.onSubmitCompleted})
+      : super(key: key);
 
   final FormFieldValidator<String> emailValidator;
+  final FormFieldValidator<String> codeValidator;
   final Function onSwitchLogin;
+  final Function onSubmitCompleted;
 
   @override
   _RecoverCardState createState() => _RecoverCardState();
@@ -714,7 +727,6 @@ class _RecoverCardState extends State<_RecoverCard>
   TextEditingController _nameController;
   TextEditingController _codeController;
 
-
   var _isSubmitting = false;
   var _inputAccountFinish = false;
 
@@ -724,15 +736,15 @@ class _RecoverCardState extends State<_RecoverCard>
   AnimationController _postSwitchAuthController;
 
   AnimationController _loadingController;
-
+  Animation<double> _buttonScaleAnimation;
 
   @override
   void initState() {
     super.initState();
 
     final auth = Provider.of<Auth>(context, listen: false);
-    _nameController = new TextEditingController(text: auth.email);
-    _codeController=new TextEditingController(text:auth.code);
+    _nameController = new TextEditingController(text: auth.account);
+    _codeController = new TextEditingController(text: auth.code);
 
     _submitController = AnimationController(
       vsync: this,
@@ -749,15 +761,21 @@ class _RecoverCardState extends State<_RecoverCard>
     );
 
     _loadingController = (AnimationController(
-          vsync: this,
-          duration: Duration(milliseconds: 1150),
-          reverseDuration: Duration(milliseconds: 300),
-        )..value = 1.0);
+      vsync: this,
+      duration: Duration(milliseconds: 1150),
+      reverseDuration: Duration(milliseconds: 300),
+    )..value = 1.0);
 
     _loadingController.addStatusListener(handleLoadingAnimationStatus);
+
+    _buttonScaleAnimation =
+        Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+      parent: _loadingController,
+      curve: Interval(.4, 1.0, curve: Curves.easeOutBack),
+    ));
   }
 
-  bool _isLoading=false;
+  bool _isLoading = false;
 
   void handleLoadingAnimationStatus(AnimationStatus status) {
     if (status == AnimationStatus.forward) {
@@ -785,7 +803,8 @@ class _RecoverCardState extends State<_RecoverCard>
     }
   }
 
-  Future<bool> _submit() async {
+  //验证验证码，成功后将进入主页
+  Future<bool> _verifyCode() async {
     if (!_formRecoverKey.currentState.validate()) {
       return false;
     }
@@ -795,7 +814,7 @@ class _RecoverCardState extends State<_RecoverCard>
     _formRecoverKey.currentState.save();
     _submitController.forward();
     setState(() => _isSubmitting = true);
-    final error = await auth.onRecoverPassword(auth.email);
+    final error = await auth.onRecoverCode(auth.account);
 
     if (error != null) {
       showErrorToast(context, error);
@@ -803,12 +822,55 @@ class _RecoverCardState extends State<_RecoverCard>
       _submitController.reverse();
       return false;
     } else {
-      showSuccessToast(context, messages.recoverPasswordSuccess);
+      //登录成功了
       setState(() => _isSubmitting = false);
       _submitController.reverse();
+      widget?.onSubmitCompleted();
       return true;
     }
   }
+
+  //获取验证码
+  Future<bool> _getVerifyCode() async {
+    print("1111");
+    if (!_formRecoverKey.currentState.validate()) {
+      return false;
+    }
+    print("222");
+
+    final auth = Provider.of<Auth>(context, listen: false);
+    final messages = Provider.of<LoginMessages>(context, listen: false);
+    print("3333");
+
+    _formRecoverKey.currentState.save();
+    _submitController.forward();
+    //显示loading动画
+    print("4444");
+
+    setState(() => _isSubmitting = true);
+    final error = await auth.onRecoverCode(auth.account);
+    print("5555");
+
+    //关掉loading动画 ToDO
+    _submitController.reverse();
+
+    if (error != null) {
+      //提示报错信息
+      showErrorToast(context, error);
+      setState(() => _isSubmitting = false);
+      return false;
+    } else {
+      //显示验入验证码，并且上面输入帐号的不可编辑
+      _inputAccountFinish = true;
+      _accountNameEnable = false;
+      _switchAuthMode();
+      // showSuccessToast(context, messages.recoverPasswordSuccess);
+      setState(() => _isSubmitting = false);
+      return true;
+    }
+  }
+
+  bool _accountNameEnable = true;
 
   Widget _buildRecoverNameField(
       double width, LoginMessages messages, Auth auth) {
@@ -819,9 +881,10 @@ class _RecoverCardState extends State<_RecoverCard>
       prefixIcon: Icon(FontAwesomeIcons.solidUserCircle),
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.done,
-      onFieldSubmitted: (value) => _submit(),
+      onFieldSubmitted: (value) => _getVerifyCode(),
       validator: widget.emailValidator,
-      onSaved: (value) => auth.email = value,
+      onSaved: (value) => auth.account = value,
+      enabled: _accountNameEnable,
     );
   }
 
@@ -835,8 +898,8 @@ class _RecoverCardState extends State<_RecoverCard>
       prefixIcon: Icon(FontAwesomeIcons.pager),
       keyboardType: TextInputType.number,
       textInputAction: TextInputAction.done,
-      onFieldSubmitted: (value) => _submit(),
-      validator: widget.emailValidator,
+      onFieldSubmitted: (value) => _verifyCode(),
+      validator: _inputAccountFinish ? widget.codeValidator : null,
       onSaved: (value) => auth.code = value,
     );
   }
@@ -844,11 +907,17 @@ class _RecoverCardState extends State<_RecoverCard>
   Widget _buildRecoverButton(ThemeData theme, LoginMessages messages) {
     return AnimatedButton(
       controller: _submitController,
-      text: messages.recoverPasswordButton,
-      // onPressed: !_isSubmitting ? _submit : null,
+      text: _accountNameEnable
+          ? messages.getVerifyButton
+          : messages.loginOrRegister,
       onPressed: () {
-        _inputAccountFinish = true;
-        _switchAuthMode();
+        if (_accountNameEnable) {
+          //请求输入验证码
+          _getVerifyCode();
+        } else {
+          //验证验证码
+          _verifyCode();
+        }
       },
     );
   }
@@ -903,7 +972,7 @@ class _RecoverCardState extends State<_RecoverCard>
                   padding:
                       EdgeInsets.only(left: cardPadding, right: cardPadding),
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 10),
                 ExpandableContainer(
                   backgroundColor: theme.accentColor,
                   controller: _switchAuthController,

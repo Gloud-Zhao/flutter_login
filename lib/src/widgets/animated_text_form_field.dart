@@ -197,6 +197,7 @@ class _AnimatedTextFormFieldState extends State<AnimatedTextFormField> {
               child: widget.suffixIcon,
             )
           : widget.suffixIcon),
+        disabledBorder:OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(28.0)),borderSide: BorderSide(color: Colors.transparent, width: 3.0)),
     );
   }
 

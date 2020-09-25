@@ -168,13 +168,13 @@ void main() {
     expect(confirmPasswordTextFieldWidget(tester).decoration.errorText, null);
   });
 
-  testWidgets('Custom emailValidator should show error when return a string',
+  testWidgets('Custom accountValidator should show error when return a string',
       (WidgetTester tester) async {
     final loginBuilder = () => widget(FlutterLogin(
           onSignup: (data) => null,
           onLogin: (data) => null,
-          onRecoverPassword: (data) => null,
-          emailValidator: (value) => value.endsWith('.com') ? null : 'Invalid!',
+          onRecoverCode: (data) => null,
+          accountValidator: (value) => value.endsWith('.com') ? null : 'Invalid!',
         ));
     await tester.pumpWidget(loginBuilder());
     await tester.pumpAndSettle(loadingAnimationDuration);
@@ -203,7 +203,7 @@ void main() {
     final loginBuilder = () => widget(FlutterLogin(
           onSignup: (data) => null,
           onLogin: (data) => null,
-          onRecoverPassword: (data) => null,
+          onRecoverCode: (data) => null,
           passwordValidator: (value) => value.length == 5 ? null : 'Invalid!',
         ));
     await tester.pumpWidget(loginBuilder());
@@ -234,9 +234,9 @@ void main() {
     final loginBuilder = () => widget(FlutterLogin(
           onSignup: (data) => null,
           onLogin: (data) => null,
-          onRecoverPassword: (data) =>
+          onRecoverCode: (data) =>
               users.contains(data) ? null : Future.value('User not exists'),
-          emailValidator: (value) => null,
+          accountValidator: (value) => null,
         ));
     await tester.pumpWidget(loginBuilder());
     await tester.pumpAndSettle(loadingAnimationDuration);
@@ -275,7 +275,7 @@ void main() {
     final loginBuilder = () => widget(FlutterLogin(
           onSignup: (data) => null,
           onLogin: (data) => null,
-          onRecoverPassword: (data) => null,
+          onRecoverCode: (data) => null,
           messages: LoginMessages(
             usernameHint: 'Username',
             passwordHint: 'Pass',
@@ -377,7 +377,7 @@ void main() {
     var flutterLogin = widget(FlutterLogin(
       onSignup: (data) => null,
       onLogin: (data) => null,
-      onRecoverPassword: (data) => null,
+      onRecoverCode: (data) => null,
       showDebugButtons: true,
     ));
     await tester.pumpWidget(flutterLogin);
@@ -388,7 +388,7 @@ void main() {
     flutterLogin = widget(FlutterLogin(
       onSignup: (data) => null,
       onLogin: (data) => null,
-      onRecoverPassword: (data) => null,
+      onRecoverCode: (data) => null,
       showDebugButtons: false,
     ));
     await tester.pumpWidget(flutterLogin);
@@ -405,7 +405,7 @@ void main() {
     var flutterLogin = widget(FlutterLogin(
       onSignup: (data) => null,
       onLogin: (data) => null,
-      onRecoverPassword: (data) => null,
+      onRecoverCode: (data) => null,
     ));
     await tester.pumpWidget(flutterLogin);
     await tester.pumpAndSettle(loadingAnimationDuration);
@@ -415,7 +415,7 @@ void main() {
     flutterLogin = widget(FlutterLogin(
       onSignup: (data) => null,
       onLogin: (data) => null,
-      onRecoverPassword: (data) => null,
+      onRecoverCode: (data) => null,
       logo: 'assets/images/ecorp.png',
     ));
     await tester.pumpWidget(flutterLogin);
@@ -432,7 +432,7 @@ void main() {
     var flutterLogin = widget(FlutterLogin(
       onSignup: (data) => null,
       onLogin: (data) => null,
-      onRecoverPassword: (data) => null,
+      onRecoverCode: (data) => null,
       title: '',
     ));
     await tester.pumpWidget(flutterLogin);
@@ -443,7 +443,7 @@ void main() {
     flutterLogin = widget(FlutterLogin(
       onSignup: (data) => null,
       onLogin: (data) => null,
-      onRecoverPassword: (data) => null,
+      onRecoverCode: (data) => null,
       title: null,
     ));
     await tester.pumpWidget(flutterLogin);
@@ -454,7 +454,7 @@ void main() {
     flutterLogin = widget(FlutterLogin(
       onSignup: (data) => null,
       onLogin: (data) => null,
-      onRecoverPassword: (data) => null,
+      onRecoverCode: (data) => null,
       title: 'My Login',
     ));
     await tester.pumpWidget(flutterLogin);
@@ -469,8 +469,8 @@ void main() {
     final loginBuilder = () => widget(FlutterLogin(
           onSignup: (data) => null,
           onLogin: mockCallback.onLogin,
-          onRecoverPassword: (data) => null,
-          emailValidator: mockCallback.emailValidator,
+          onRecoverCode: (data) => null,
+          accountValidator: mockCallback.accountValidator,
           passwordValidator: mockCallback.passwordValidator,
           onSubmitAnimationCompleted: mockCallback.onSubmitAnimationCompleted,
         ));
@@ -491,7 +491,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyInOrder([
-      mockCallback.emailValidator('invalid-name'),
+      mockCallback.accountValidator('invalid-name'),
       mockCallback.passwordValidator(user.password),
     ]);
     verifyNever(mockCallback.onLogin(any));
@@ -509,7 +509,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyInOrder([
-      mockCallback.emailValidator(invalidUser.name),
+      mockCallback.accountValidator(invalidUser.name),
       mockCallback.passwordValidator(invalidUser.password),
       mockCallback.onLogin(any),
     ]);
@@ -527,7 +527,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyInOrder([
-      mockCallback.emailValidator(user.name),
+      mockCallback.accountValidator(user.name),
       mockCallback.passwordValidator(user.password),
       mockCallback.onLogin(any),
       mockCallback.onSubmitAnimationCompleted(),
@@ -542,8 +542,8 @@ void main() {
     final loginBuilder = () => widget(FlutterLogin(
           onLogin: (data) => null,
           onSignup: mockCallback.onSignup,
-          onRecoverPassword: (data) => null,
-          emailValidator: mockCallback.emailValidator,
+          onRecoverCode: (data) => null,
+          accountValidator: mockCallback.accountValidator,
           passwordValidator: mockCallback.passwordValidator,
           onSubmitAnimationCompleted: mockCallback.onSubmitAnimationCompleted,
         ));
@@ -569,7 +569,7 @@ void main() {
     clickSubmitButton();
     await tester.pumpAndSettle();
 
-    verifyNever(mockCallback.emailValidator(invalidUser.name));
+    verifyNever(mockCallback.accountValidator(invalidUser.name));
     verifyNever(mockCallback.passwordValidator(invalidUser.password));
     verifyNever(mockCallback.onSignup(any));
     verifyNever(mockCallback.onSubmitAnimationCompleted());
@@ -588,7 +588,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyInOrder([
-      mockCallback.emailValidator('invalid-name'),
+      mockCallback.accountValidator('invalid-name'),
       mockCallback.passwordValidator(user.password),
     ]);
     verifyNever(mockCallback.onSignup(any));
@@ -609,7 +609,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyInOrder([
-      mockCallback.emailValidator(invalidUser.name),
+      mockCallback.accountValidator(invalidUser.name),
       mockCallback.passwordValidator(invalidUser.password),
       mockCallback.onSignup(any),
     ]);
@@ -629,7 +629,7 @@ void main() {
     await tester.pumpAndSettle();
 
     verifyInOrder([
-      mockCallback.emailValidator(user.name),
+      mockCallback.accountValidator(user.name),
       mockCallback.passwordValidator(user.password),
       mockCallback.onSignup(any),
       mockCallback.onSubmitAnimationCompleted(),
@@ -676,7 +676,7 @@ void main() {
     final flutterLogin = widget(FlutterLogin(
       onSignup: (data) => null,
       onLogin: (data) => null,
-      onRecoverPassword: (data) => null,
+      onRecoverCode: (data) => null,
       logo: 'assets/images/ecorp.png',
       title: 'Yang2020',
     ));

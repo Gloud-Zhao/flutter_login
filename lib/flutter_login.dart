@@ -207,12 +207,14 @@ class FlutterLogin extends StatefulWidget {
     Key key,
     @required this.onSignup,
     @required this.onLogin,
-    @required this.onRecoverPassword,
+    @required this.onRecoverCode,
+    @required this.onVerifyCode,
     this.title = 'LOGIN',
     this.logo,
     this.messages,
     this.theme,
-    this.emailValidator,
+    this.accountValidator,
+    this.codeValidator,
     this.passwordValidator,
     this.onSubmitAnimationCompleted,
     this.logoTag,
@@ -227,7 +229,9 @@ class FlutterLogin extends StatefulWidget {
   final AuthCallback onLogin;
 
   /// Called when the user hit the submit button when in recover password mode
-  final RecoverCallback onRecoverPassword;
+  final RecoverCallback onRecoverCode;
+
+  final VerifyCodeCallback onVerifyCode;
 
   /// The large text above the login [Card], usually the app or company name
   final String title;
@@ -246,10 +250,12 @@ class FlutterLogin extends StatefulWidget {
 
   /// Email validating logic, Returns an error string to display if the input is
   /// invalid, or null otherwise
-  final FormFieldValidator<String> emailValidator;
+  final FormFieldValidator<String> accountValidator;
 
-  /// Same as [emailValidator] but for password
+  /// Same as [accountValidator] but for password
   final FormFieldValidator<String> passwordValidator;
+
+  final FormFieldValidator<String> codeValidator;
 
   /// Called after the submit animation's completed. Put your route transition
   /// logic here. Recommend to use with [logoTag] and [titleTag]
@@ -270,7 +276,7 @@ class FlutterLogin extends StatefulWidget {
   final bool showDebugButtons;
 
   static final FormFieldValidator<String> defaultEmailValidator = (value) {
-    if (value.isEmpty || !Regex.email.hasMatch(value)) {
+    if (value.isEmpty ) {
       return 'Invalid email!';
     }
     return null;
@@ -279,6 +285,13 @@ class FlutterLogin extends StatefulWidget {
   static final FormFieldValidator<String> defaultPasswordValidator = (value) {
     if (value.isEmpty || value.length <= 2) {
       return 'Password is too short!';
+    }
+    return null;
+  };
+
+  static final FormFieldValidator<String> defaultCodeValidator = (value) {
+    if (value.isEmpty ) {
+      return 'Code is Empty!';
     }
     return null;
   };
@@ -537,9 +550,12 @@ class _FlutterLoginState extends State<FlutterLogin>
     final cardTopPosition = deviceSize.height / 2 - cardInitialHeight / 2;
     final headerHeight = cardTopPosition - headerMargin;
     final emailValidator =
-        widget.emailValidator ?? FlutterLogin.defaultEmailValidator;
+        widget.accountValidator ?? FlutterLogin.defaultEmailValidator;
     final passwordValidator =
         widget.passwordValidator ?? FlutterLogin.defaultPasswordValidator;
+
+    final codeValidator =widget.codeValidator ?? FlutterLogin.defaultCodeValidator;
+
 
     return MultiProvider(
       providers: [
@@ -550,7 +566,8 @@ class _FlutterLoginState extends State<FlutterLogin>
           create: (context) => Auth(
             onLogin: widget.onLogin,
             onSignup: widget.onSignup,
-            onRecoverPassword: widget.onRecoverPassword,
+            onRecoverCode: widget.onRecoverCode,
+            onVerifyCode: widget.onVerifyCode
           ),
         ),
       ],
@@ -578,6 +595,7 @@ class _FlutterLoginState extends State<FlutterLogin>
                         padding: EdgeInsets.only(top: cardTopPosition),
                         loadingController: _loadingController,
                         emailValidator: emailValidator,
+                        codeValidator: codeValidator,
                         passwordValidator: passwordValidator,
                         onSubmit: _reverseHeaderAnimation,
                         onSubmitCompleted: widget.onSubmitAnimationCompleted,

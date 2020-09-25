@@ -15,6 +15,8 @@ class LoginMessages with ChangeNotifier {
     this.goBackButton: defaultGoBackButton,
     this.confirmPasswordError: defaultConfirmPasswordError,
     this.recoverPasswordSuccess: defaultRecoverPasswordSuccess,
+    this.getVerifyButton:defaultGetVerifyButton,
+    this.loginOrRegister:defaultLoginOrRegisterButton
   });
 
   static const defaultUsernameHint = 'Email/Phone';
@@ -31,11 +33,16 @@ class LoginMessages with ChangeNotifier {
   static const defaultGoBackButton = 'BACK';
   static const defaultConfirmPasswordError = 'Password do not match!';
   static const defaultRecoverPasswordSuccess = 'An email has been sent';
-
+  static const defaultGetVerifyButton = 'Get Code';
+  static const defaultLoginOrRegisterButton = 'Login/Register';
   /// Hint text of the user name [TextField]
   final String usernameHint;
 
   final String userCodeHint;
+
+  final String getVerifyButton;
+
+  final String loginOrRegister;
 
   /// Hint text of the password [TextField]
   final String passwordHint;

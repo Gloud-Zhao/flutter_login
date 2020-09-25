@@ -10,9 +10,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  #测试库
   font_awesome_flutter: ^8.5.0
   provider: ^4.0.2
   transformer_page_view: ^0.1.6
+  #通知提示
   flushbar: ^1.9.1
   # flutter_test from sdk depends on quiver 2.0.5
   quiver: ^2.0.5
