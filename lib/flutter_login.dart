@@ -599,6 +599,7 @@ class _FlutterLoginState extends State<FlutterLogin>
                         passwordValidator: passwordValidator,
                         onSubmit: _reverseHeaderAnimation,
                         onSubmitCompleted: widget.onSubmitAnimationCompleted,
+                        onVerifyCompleted:  widget.onSubmitAnimationCompleted,
                       ),
                     ),
                     Positioned(
